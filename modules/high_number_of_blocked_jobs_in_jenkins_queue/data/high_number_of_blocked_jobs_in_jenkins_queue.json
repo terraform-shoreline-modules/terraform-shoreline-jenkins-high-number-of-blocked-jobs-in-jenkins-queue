@@ -1,0 +1,206 @@
+{
+  "name": "high_number_of_blocked_jobs_in_jenkins_queue",
+  "description": "This incident type indicates that there is a high number of blocked jobs in the Jenkins queue. This can cause delays in job execution and can be indicative of a larger issue within the system. It is important to investigate the root cause of the blocked jobs and take appropriate action to prevent this from happening in the future.",
+  "params": [
+    {
+      "name": "JENKINS_DEPLOYMENT_NAME",
+      "value": ""
+    },
+    {
+      "name": "JENKINS_NAMESPACE",
+      "value": ""
+    },
+    {
+      "name": "JENKINS_POD_NAME",
+      "value": ""
+    },
+    {
+      "name": "JENKINS_CONTAINER_NAME",
+      "value": ""
+    },
+    {
+      "name": "JENKINS_SERVICE_NAME",
+      "value": ""
+    },
+    {
+      "name": "MINIMUM_DISK_SPACE_GB",
+      "value": ""
+    },
+    {
+      "name": "DESIRED_NUMBER_OF_EXECUTORS",
+      "value": ""
+    },
+    {
+      "name": "K8S_CLUSTER_NAME",
+      "value": ""
+    },
+    {
+      "name": "NAMESPACE",
+      "value": ""
+    }
+  ],
+  "cells": [
+    {
+      "name": "cell_1",
+      "type": "MARKDOWN",
+      "enabled": true,
+      "content": "## High number of blocked jobs in Jenkins queue.\nThis incident type indicates that there is a high number of blocked jobs in the Jenkins queue. This can cause delays in job execution and can be indicative of a larger issue within the system. It is important to investigate the root cause of the blocked jobs and take appropriate action to prevent this from happening in the future."
+    },
+    {
+      "name": "cell_2",
+      "type": "MARKDOWN",
+      "enabled": true,
+      "content": "## Get the list of pods running in the Jenkins namespace"
+    },
+    {
+      "name": "cell_3",
+      "type": "OP_LANG",
+      "enabled": true,
+      "content": "pod | k8s_cluster_name=$K8S_CLUSTER_NAME | app='shoreline' | limit=1 | random=1 | `kubectl get pods -n ${JENKINS_NAMESPACE}`"
+    },
+    {
+      "name": "cell_4",
+      "type": "MARKDOWN",
+      "enabled": true,
+      "content": "## Check the logs of the Jenkins pod"
+    },
+    {
+      "name": "cell_5",
+      "type": "OP_LANG",
+      "enabled": true,
+      "content": "pod | k8s_cluster_name=$K8S_CLUSTER_NAME | app='shoreline' | limit=1 | random=1 | `kubectl logs ${JENKINS_POD_NAME} -n ${JENKINS_NAMESPACE}`"
+    },
+    {
+      "name": "cell_6",
+      "type": "MARKDOWN",
+      "enabled": true,
+      "content": "## Check the resource usage of the Jenkins pod"
+    },
+    {
+      "name": "cell_7",
+      "type": "OP_LANG",
+      "enabled": true,
+      "content": "pod | k8s_cluster_name=$K8S_CLUSTER_NAME | app='shoreline' | limit=1 | random=1 | `kubectl top pod ${JENKINS_POD_NAME} -n ${JENKINS_NAMESPACE}`"
+    },
+    {
+      "name": "cell_8",
+      "type": "MARKDOWN",
+      "enabled": true,
+      "content": "## Check the status of the Jenkins service"
+    },
+    {
+      "name": "cell_9",
+      "type": "OP_LANG",
+      "enabled": true,
+      "content": "pod | k8s_cluster_name=$K8S_CLUSTER_NAME | app='shoreline' | limit=1 | random=1 | `kubectl get svc ${JENKINS_SERVICE_NAME} -n ${JENKINS_NAMESPACE}`"
+    },
+    {
+      "name": "cell_10",
+      "type": "MARKDOWN",
+      "enabled": true,
+      "content": "## Check the status of the Jenkins deployment"
+    },
+    {
+      "name": "cell_11",
+      "type": "OP_LANG",
+      "enabled": true,
+      "content": "pod | k8s_cluster_name=$K8S_CLUSTER_NAME | app='shoreline' | limit=1 | random=1 | `kubectl get deployment ${JENKINS_DEPLOYMENT_NAME} -n ${JENKINS_NAMESPACE}`"
+    },
+    {
+      "name": "cell_12",
+      "type": "MARKDOWN",
+      "enabled": true,
+      "content": "## Check the Kubernetes events related to the Jenkins deployment"
+    },
+    {
+      "name": "cell_13",
+      "type": "OP_LANG",
+      "enabled": true,
+      "content": "pod | k8s_cluster_name=$K8S_CLUSTER_NAME | app='shoreline' | limit=1 | random=1 | `kubectl get events --sort-by=.metadata.creationTimestamp -n ${JENKINS_NAMESPACE} | grep ${JENKINS_DEPLOYMENT_NAME}`"
+    },
+    {
+      "name": "cell_14",
+      "type": "MARKDOWN",
+      "enabled": true,
+      "content": "## Check the Jenkins queue status"
+    },
+    {
+      "name": "cell_15",
+      "type": "OP_LANG",
+      "enabled": true,
+      "content": "container | k8s_cluster_name=$K8S_CLUSTER_NAME | namespace=$NAMESPACE | name=$\"java -jar /var/jenkins_home/war/WEB-INF/jenkins-cli.jar -s http://localhost:8080/ list-queue-items\" | `sh -c \"java -jar /var/jenkins_home/war/WEB-INF/jenkins-cli.jar -s http://localhost:8080/ list-queue-items\"`"
+    },
+    {
+      "name": "cell_16",
+      "type": "MARKDOWN",
+      "enabled": true,
+      "content": "## Check the Jenkins build executor status"
+    },
+    {
+      "name": "cell_17",
+      "type": "OP_LANG",
+      "enabled": true,
+      "content": "container | k8s_cluster_name=$K8S_CLUSTER_NAME | namespace=$NAMESPACE | name=$\"java -jar /var/jenkins_home/war/WEB-INF/jenkins-cli.jar -s http://localhost:8080/ list-builds\" | `sh -c \"java -jar /var/jenkins_home/war/WEB-INF/jenkins-cli.jar -s http://localhost:8080/ list-builds\"`"
+    },
+    {
+      "name": "cell_18",
+      "type": "MARKDOWN",
+      "enabled": true,
+      "content": "## Check the Jenkins system logs"
+    },
+    {
+      "name": "cell_19",
+      "type": "OP_LANG",
+      "enabled": true,
+      "content": "container | k8s_cluster_name=$K8S_CLUSTER_NAME | namespace=$NAMESPACE | name=$\"tail -f /var/log/jenkins/jenkins.log\" | `sh -c \"tail -f /var/log/jenkins/jenkins.log\"`"
+    },
+    {
+      "name": "cell_20",
+      "type": "MARKDOWN",
+      "enabled": true,
+      "content": "## The Jenkins server may be overloaded with too many queued jobs, causing some of them to be blocked and unable to execute."
+    },
+    {
+      "name": "cell_21",
+      "type": "OP_LANG",
+      "enabled": true,
+      "content": "pod | k8s_cluster_name=$K8S_CLUSTER_NAME | app='shoreline' | random=1 | limit=1 | invoke_insights_script_d3f9ffd6f7db443b82ce681cbb5ea10a_2023_08_08_16_23_53($JENKINS_NAMESPACE, $JENKINS_POD_NAME, $JENKINS_CONTAINER_NAME, $NAMESPACE)"
+    },
+    {
+      "name": "cell_22",
+      "type": "MARKDOWN",
+      "enabled": true,
+      "content": "## There could be an issue with the configuration of the Jenkins server or job settings that is causing certain jobs to block others in the queue."
+    },
+    {
+      "name": "cell_23",
+      "type": "OP_LANG",
+      "enabled": true,
+      "content": "pod | k8s_cluster_name=$K8S_CLUSTER_NAME | app='shoreline' | random=1 | limit=1 | invoke_pods_and_jobs_check($JENKINS_NAMESPACE)"
+    },
+    {
+      "name": "cell_24",
+      "type": "MARKDOWN",
+      "enabled": true,
+      "content": "## Increase the number of Jenkins executors to alleviate the job backlog and prevent jobs from being blocked in the queue."
+    },
+    {
+      "name": "cell_25",
+      "type": "OP_LANG",
+      "enabled": true,
+      "content": "pod | k8s_cluster_name=$K8S_CLUSTER_NAME | app='shoreline' | random=1 | limit=1 | invoke_jenkins_scale($JENKINS_DEPLOYMENT_NAME, $DESIRED_NUMBER_OF_EXECUTORS)"
+    },
+    {
+      "name": "cell_26",
+      "type": "MARKDOWN",
+      "enabled": true,
+      "content": "## Identify and resolve any issues with the Jenkins infrastructure, such as network or disk space problems, that may be causing the queue to become blocked."
+    },
+    {
+      "name": "cell_27",
+      "type": "OP_LANG",
+      "enabled": true,
+      "content": "pod | k8s_cluster_name=$K8S_CLUSTER_NAME | app='shoreline' | random=1 | limit=1 | invoke_jenkins_disk_checker($JENKINS_DEPLOYMENT_NAME, $JENKINS_NAMESPACE, $MINIMUM_DISK_SPACE_GB, $NAMESPACE)"
+    }
+  ]
+}
